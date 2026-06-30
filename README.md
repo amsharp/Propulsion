@@ -116,6 +116,36 @@ Endpoints:
 
 ---
 
+## 3b. Deploy to Railway
+
+The repo ships a `Dockerfile` and `railway.json`, so Railway builds and runs it
+as an always-on service (it must stay up for the scheduler, watchdog, and the
+real-time socket — don't use a platform that sleeps).
+
+1. **Create the service** — in Railway: *New Project → Deploy from GitHub repo*
+   and pick this repo/branch. It auto-detects the `Dockerfile`.
+2. **Add a persistent volume** — *Service → Settings → Volumes → New Volume*,
+   mount path **`/data`**. This is essential: without it, your Google link
+   tokens and schedules are wiped on every redeploy. The Dockerfile already sets
+   `DATA_DIR=/data`.
+3. **Set environment variables** — *Service → Variables*, paste the contents of
+   your `.env` (everything from `.env.example`). Notes:
+   - **Don't set `PORT`** — Railway injects it; the app reads it automatically.
+   - Leave `DATA_DIR=/data` (already the image default).
+   - For Home Graph, the simplest path is to paste the service-account JSON into
+     a variable and write it to a file at boot, or skip it (optional).
+4. **Get your public URL** — *Settings → Networking → Generate Domain*. Use that
+   `https://…up.railway.app` as `PUBLIC_BASE_URL` (add it as a variable and
+   redeploy).
+5. **Verify** — open `https://YOUR-URL/healthz` → `{"ok":true}`, then check the
+   deploy logs for `Connected to spa: …`.
+
+Then do the Google account-linking step below using your Railway domain.
+
+> Rough cost: Railway's usage-based plan runs this tiny always-on service for a
+> few dollars a month. Fly.io and a small VPS work the same way — attach a
+> volume for `/data` and point `PUBLIC_BASE_URL` at the HTTPS domain.
+
 ## 4. Connect it to Google Home
 
 This is a standard [Google Smart Home Action](https://developers.home.google.com/cloud-to-cloud).

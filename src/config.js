@@ -3,7 +3,7 @@
 // project stays lean.
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -79,7 +79,10 @@ export const config = {
     realtime: bool(process.env.REALTIME_ENABLED, true),
   },
 
-  dataDir: join(projectRoot, 'data'),
+  // Where runtime state (OAuth tokens, schedules) lives. On hosts with an
+  // ephemeral filesystem (Railway, Fly, etc.) point DATA_DIR at a mounted
+  // persistent volume so links and schedules survive redeploys.
+  dataDir: process.env.DATA_DIR ? resolve(process.env.DATA_DIR) : join(projectRoot, 'data'),
   verbose: bool(process.env.VERBOSE, false),
 };
 
